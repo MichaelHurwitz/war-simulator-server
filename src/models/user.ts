@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 import { OrganizationEnum } from "./organizationEnum";
 
 export interface Missile {
+  interceptionTime: number;
   name: string;
   amount: number;
 }

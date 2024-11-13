@@ -81,7 +81,10 @@ export const updateUserMissiles = async (userId: string, missileName: string, am
           throw new Error("Missile count cannot be negative");
         }
       } else {
-        user.missiles.push({ name: missileName, amount });
+        user.missiles.push({
+          name: missileName, amount,
+          interceptionTime: 0
+        });
       }
   
       await user.save();
