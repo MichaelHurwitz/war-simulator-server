@@ -56,5 +56,13 @@ const UserSchema: Schema = new mongoose.Schema(
   }
 );
 
+declare global {
+    namespace Express {
+      interface Request {
+        user: IUser;  
+      }
+    }
+  }
+
 const User = mongoose.model<IUser>("User", UserSchema);
 export default User;

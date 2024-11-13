@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { errorHandler } from "./middleware/errorHandler";
 import connectDB from "./data/db";
+import userRoutes from "./routes/userRoutes";
 
 
 dotenv.config();
@@ -13,6 +14,8 @@ app.use(express.json());
 
 
 connectDB();
+
+app.use("/api/users", userRoutes);
 
 
 app.use(errorHandler);

@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import jwt from 'jsonwebtoken';
 import User from "../models/user";
 import organizations from "../data/organizations.json"; 
 import { getMissilesForOrganization } from "../utils/helperFuncs";
@@ -50,6 +51,9 @@ export const loginUser = async ({ username, password }: any) => {
   if (!isMatch) {
     throw new Error("Invalid username or password");
   }
+
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: "1h" });
+  console.log(token);
 
   return user;
 };

@@ -34,17 +34,24 @@ export const login = async (req: Request, res: Response) => {
 };
 
 
-export const updateUserMissilesController = async (req: Request, res: Response) => {
-  const { userId, missileName, amount } = req.body;
-
-  try {
-    const updatedUser = await updateUserMissiles(userId, missileName, amount);
-    res.status(200).json({ message: "Missiles updated successfully", user: updatedUser });
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(400).json({ message: error.message });
-    } else {
-      res.status(400).json({ message: "An unknown error occurred while updating missiles" });
+export const updateUserMissilesController = async (req: Request, res: Response): Promise<void> => {
+    const { missileName, amount } = req.body;
+  
+    try {
+      const userId = req.user?.id; 
+  
+      if (!userId) {
+        res.status(401).json({ message: "User not authenticated" });
+        return; 
+      }
+  
+      const updatedUser = await updateUserMissiles(userId, missileName, amount);
+      res.status(200).json({ message: "Missiles updated successfully", user: updatedUser });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(400).json({ message: "An unknown error occurred while updating missiles" });
+      }
     }
-  }
-};
+  };
