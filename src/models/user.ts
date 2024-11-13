@@ -1,15 +1,17 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { OrganizationEnum } from "./organizationEnum";
 
+export interface Missile {
+  name: string;
+  amount: number;
+}
+
 export interface IUser extends Document {
   username: string;
   password: string;
   organization: OrganizationEnum;
   region?: string;
-  missiles: {
-    name: string;
-    amount: number;
-  }[];
+  missiles: Missile[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -28,7 +30,7 @@ const UserSchema: Schema = new mongoose.Schema(
     },
     organization: {
       type: String,
-      enum: Object.values(OrganizationEnum), 
+      enum: Object.values(OrganizationEnum),
       required: true,
     },
     region: {
@@ -55,14 +57,6 @@ const UserSchema: Schema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-declare global {
-    namespace Express {
-      interface Request {
-        user: IUser;  
-      }
-    }
-  }
 
 const User = mongoose.model<IUser>("User", UserSchema);
 export default User;
