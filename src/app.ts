@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
 import http from "http";
-import { Server } from "socket.io";
 import { setupWebSocket } from "./sockets/webSocket";
 import { errorHandler } from "./middleware/errorHandler";
 import connectDB from "./data/db";
@@ -19,13 +18,8 @@ app.use(express.json());
 connectDB();
 
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "*", 
-  },
-});
 
-setupWebSocket(io);
+setupWebSocket(server);
 
 
 app.use("/api/users", userRoutes);
@@ -34,7 +28,7 @@ app.use("/api/users", userRoutes);
 app.use(errorHandler);
 
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
   });
   
