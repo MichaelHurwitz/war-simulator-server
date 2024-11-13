@@ -1,5 +1,6 @@
+import LaunchEvent from "../models/launchEvent";
+import User from "../models/user";
 import { Server } from "socket.io";
-import { updateMissileCount, getMissileCount } from "../utils/helperFuncs";
 
 export const launchMissile = async (
   io: Server,
@@ -7,18 +8,28 @@ export const launchMissile = async (
   region: string,
   missileName: string
 ) => {
-  const missileCount = await getMissileCount(userId, missileName);
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
 
-  if (missileCount <= 0) {
-    throw new Error(`No ${missileName} missiles available for launch`);
+  const missile = user.missiles.find((m) => m.name === missileName);
+  if (!missile || missile.amount <= 0) {
+    throw new Error("Insufficient missiles available");
   }
 
-  await updateMissileCount(userId, missileName, -1);
+  missile.amount -= 1;
+  await user.save();
 
-  io.to(region).emit("missile_launched", { region, missileName });
+  const launchEvent = new LaunchEvent({
+    region,
+    missileName,
+    launchedBy: userId,
+    remainingMissiles: missile.amount, 
+  });
+  await launchEvent.save();
 
-  const impactTime = 10;
-  setTimeout(() => {
-    io.to(region).emit("missile_impact", { region, missileName });
-  }, impactTime * 1000);
+  io.to(region).emit("missile_launched", {
+    missileName,
+    region,
+    remainingMissiles: missile.amount,
+  });
 };

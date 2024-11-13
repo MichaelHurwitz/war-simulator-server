@@ -1,26 +1,46 @@
 import { Server } from "socket.io";
-import { getMissileCount, updateMissileCount } from "../utils/helperFuncs";
+import User from "../models/user";
+import LaunchEvent from "../models/launchEvent";
 
 export const interceptMissile = async (
-    io: Server,
-    userId: string,
-    region: string,
-    missileName: string,
-    interceptorName: string
-  ) => {
-    const missileCount = await getMissileCount(userId, interceptorName);
-  
-    if (missileCount <= 0) {
-      throw new Error(`No ${interceptorName} missiles available for interception`);
-    }
-  
-    await updateMissileCount(userId, interceptorName, -1);
-  
-    io.to(region).emit("interception_success", {
-      region,
-      missileName,
-      interceptorName,
-      result: "Interception successful",
-    });
-  };
-  
+  io: Server,
+  userId: string,
+  region: string,
+  missileName: string,
+  interceptorName: string
+) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error("User not found");
+
+  const interceptor = user.missiles.find((m) => m.name === interceptorName);
+  if (!interceptor || interceptor.amount <= 0) {
+    throw new Error("Insufficient interceptors available");
+  }
+
+  const launchEvent = await LaunchEvent.findOne({ region, missileName, success: undefined });
+  if (!launchEvent) {
+    throw new Error("No active missile found for interception");
+  }
+
+  const canIntercept = interceptorName.includes(missileName);
+  if (!canIntercept) {
+    io.to(region).emit("interception_failed", { region, missileName });
+    return;
+  }
+
+  interceptor.amount -= 1;
+  await user.save();
+
+  launchEvent.interceptorName = interceptorName;
+  launchEvent.interceptedBy = userId;
+  launchEvent.success = true;
+  launchEvent.remainingInterceptors = interceptor.amount; 
+  await launchEvent.save();
+
+  io.to(region).emit("interception_result", {
+    missileName,
+    region,
+    result: "Interception successful",
+    remainingInterceptors: interceptor.amount,
+  });
+};
