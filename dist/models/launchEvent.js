@@ -36,6 +36,13 @@ const LaunchEventSchema = new mongoose_1.default.Schema({
         type: Number,
         default: null,
     },
+    impactTime: {
+        type: Number, // זמן לפגיעה בטיל במילישניות
+        required: true,
+    },
+    interceptionTime: {
+        type: Number,
+    },
     timestamp: {
         type: Date,
         default: Date.now,

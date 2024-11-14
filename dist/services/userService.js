@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserMissiles = exports.loginUser = exports.registerUser = void 0;
+exports.getUserProfileService = exports.updateUserMissiles = exports.loginUser = exports.registerUser = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_1 = __importDefault(require("../models/user"));
@@ -58,8 +58,7 @@ const loginUser = (_a) => __awaiter(void 0, [_a], void 0, function* ({ username,
         throw new Error("Invalid username or password");
     }
     const token = jsonwebtoken_1.default.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    console.log(token);
-    return user;
+    return { token, user };
 });
 exports.loginUser = loginUser;
 const updateUserMissiles = (userId, missileName, amount) => __awaiter(void 0, void 0, void 0, function* () {
@@ -80,7 +79,10 @@ const updateUserMissiles = (userId, missileName, amount) => __awaiter(void 0, vo
             }
         }
         else {
-            user.missiles.push({ name: missileName, amount });
+            user.missiles.push({
+                name: missileName, amount,
+                interceptionTime: 0
+            });
         }
         yield user.save();
         return user;
@@ -95,3 +97,11 @@ const updateUserMissiles = (userId, missileName, amount) => __awaiter(void 0, vo
     }
 });
 exports.updateUserMissiles = updateUserMissiles;
+const getUserProfileService = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_1.default.findById(userId).select("-password");
+    if (!user) {
+        throw new Error("User not found");
+    }
+    return user;
+});
+exports.getUserProfileService = getUserProfileService;

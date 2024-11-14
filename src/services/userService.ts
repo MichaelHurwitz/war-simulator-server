@@ -41,22 +41,21 @@ export const registerUser = async ({ username, password, organization, region }:
     return newUser;
   };
 
-export const loginUser = async ({ username, password }: any) => {
-  const user = await User.findOne({ username });
-  if (!user) {
-    throw new Error("Invalid username or password");
-  }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    throw new Error("Invalid username or password");
-  }
-
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: "1h" });
-  console.log(token);
-
-  return user;
-};
+  export const loginUser = async ({ username, password }: any) => {
+    const user = await User.findOne({ username });
+    if (!user) {
+      throw new Error("Invalid username or password");
+    }
+  
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw new Error("Invalid username or password");
+    }
+  
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: "1h" });
+    return { token, user };
+  };
+  
 
 export const updateUserMissiles = async (userId: string, missileName: string, amount: number) => {
     try {
@@ -97,4 +96,12 @@ export const updateUserMissiles = async (userId: string, missileName: string, am
         throw new Error("An unknown error occurred");
       }
     }
+  };
+
+  export const getUserProfileService = async (userId: string) => {
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
   };

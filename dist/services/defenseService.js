@@ -27,10 +27,16 @@ const interceptMissile = (io, userId, region, missileName, interceptorName) => _
     if (!launchEvent) {
         throw new Error("No active missile found for interception");
     }
-    const canIntercept = interceptorName.includes(missileName);
-    if (!canIntercept) {
+    const currentTime = Date.now();
+    const timeElapsed = currentTime - launchEvent.timestamp.getTime();
+    const timeRemaining = launchEvent.impactTime - timeElapsed;
+    if (timeRemaining <= 0) {
+        io.to(region).emit("missile_impact", { region, missileName });
+        throw new Error("Missile already impacted");
+    }
+    if (timeRemaining < interceptor.interceptionTime) {
         io.to(region).emit("interception_failed", { region, missileName });
-        return;
+        throw new Error("Interceptor failed: Not enough time");
     }
     interceptor.amount -= 1;
     yield user.save();

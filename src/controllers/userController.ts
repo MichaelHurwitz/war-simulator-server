@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { registerUser, loginUser, updateUserMissiles } from "../services/userService";
+import { registerUser, loginUser, updateUserMissiles, getUserProfileService } from "../services/userService";
 
 
 export const register = async (req: Request, res: Response) => {
@@ -19,19 +19,23 @@ export const register = async (req: Request, res: Response) => {
 
 
 export const login = async (req: Request, res: Response) => {
+  console.log("Login request body:", req.body);
   const { username, password } = req.body;
 
   try {
-    const token = await loginUser({ username, password });
-    res.status(200).json({ message: "Login successful", token });
+    const { token, user } = await loginUser({ username, password });
+    res.status(200).json({ message: "Login successful", token, user });
   } catch (error) {
     if (error instanceof Error) {
+      console.error("Login error:", error.message);
       res.status(401).json({ message: error.message });
     } else {
       res.status(401).json({ message: "An unknown error occurred during login" });
     }
   }
 };
+
+
 
 
 export const updateUserMissilesController = async (req: Request, res: Response): Promise<void> => {
@@ -55,3 +59,25 @@ export const updateUserMissilesController = async (req: Request, res: Response):
       }
     }
   };
+
+
+export const getUserProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id; 
+
+    if (!userId) {
+      res.status(401).json({ message: "User not authenticated" });
+      return;
+    }
+
+    const userProfile = await getUserProfileService(userId);
+    res.status(200).json(userProfile);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(400).json({ message: "An unknown error occurred while fetching the profile" });
+    }
+  }
+};
+

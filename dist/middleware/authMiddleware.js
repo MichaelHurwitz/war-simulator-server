@@ -19,6 +19,7 @@ const authenticate = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     var _a;
     const token = (_a = req.header("Authorization")) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
     if (!token) {
+        console.error("Authorization header missing or invalid");
         res.status(401).json({ message: "No token, authorization denied" });
         return;
     }
@@ -26,11 +27,13 @@ const authenticate = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         console.log("Decoded token:", decoded);
         if (!decoded.id) {
+            console.error("Decoded token missing user ID:", decoded);
             res.status(400).json({ message: "Invalid token structure: missing user ID" });
             return;
         }
-        const user = yield user_1.default.findById(decoded.id);
+        const user = yield user_1.default.findById(decoded.id).select("-password");
         if (!user) {
+            console.error("User not found for ID:", decoded.id);
             res.status(404).json({ message: "User not found" });
             return;
         }
@@ -38,6 +41,7 @@ const authenticate = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         next();
     }
     catch (error) {
+        console.error("JWT verification failed:", error);
         res.status(401).json({ message: "Token is not valid" });
     }
 });
